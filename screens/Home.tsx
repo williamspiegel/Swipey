@@ -1,8 +1,9 @@
 import React, {useCallback, useRef} from 'react';
 import {
+  FlatList,
   Image,
-  MaskedViewBase,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,13 +19,12 @@ import {
   heightPercentageToDP,
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
-import Carousel from 'react-native-snap-carousel';
 import {Audio, Video} from 'expo-av';
 import Markdown, {hasParents} from 'react-native-markdown-display';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import CollapsibleComments from '../components/CollapsibleComments';
+
 import CollapsibleCommentsRoot from '../components/CollapsibleCommentsRoot';
-import Swiper from 'react-native-swiper';
+
 const config: any = {
   method: 'post',
   url:
@@ -78,7 +78,7 @@ export class HomeHelper extends React.PureComponent {
   constructor(props: any) {
     super(props);
     this.state = {
-      pages: [{}, {}, {}],
+      pages: [{}, {}, {}, {}, {}, {}, {}, {}],
       imgVisible: false,
       currentUri: {
         uri: '',
@@ -90,18 +90,9 @@ export class HomeHelper extends React.PureComponent {
       },
       pageKey: 1,
       totalIndex: 0,
+      prevIdx: -1,
     };
   }
-
-  //children[0].data.media.oembed.html
-  // console.log(
-  //   'lolwut:   ',
-  //   he
-  //     .unescape(
-  //       '&lt;iframe width="356" height="200" src="https://www.youtube.com/embed/zdVgek9JJdI?feature=oembed&amp;enablejsapi=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen&gt;&lt;/iframe&gt;',
-  //     )
-  //     .match(/src="(?<src>[^\"]*)"/)?.groups['src'],
-  // );
 
   contentDisplay(item: any) {
     let imgMet = item?.data?.preview?.images[0].source;
@@ -214,7 +205,13 @@ export class HomeHelper extends React.PureComponent {
   _renderItem(item: any, index: number) {
     console.log(`current item at index ${index}:   `, item);
     return (
-      <ScrollView style={{paddingTop: 40, flex: 1}}>
+      <ScrollView
+        directionalLockEnabled
+        style={{
+          paddingTop: 40,
+          height: heightPercentageToDP(100),
+          width: widthPercentageToDP(100),
+        }}>
         <View style={{padding: 10, flexDirection: 'row'}}>
           <Image
             style={{
@@ -272,57 +269,36 @@ export class HomeHelper extends React.PureComponent {
     );
   }
 
-  //console.log('sub data:   ', this.props.subData);
-  onPageChanged(idx: number) {
-    this.setState({totalIndex: idx});
-    let data = this.props.subData?.data?.data?.children;
-    if (idx === 2) {
-      const newPages = this.state.pages?.map(
-        ({index}: any) => data?.[index + 1],
-      );
-      this.setState({pages: newPages});
-      this.setState({pageKey: (this.state.pageKey + 1) % 2});
-    } else if (idx === 0) {
-      const newPages = this.state.pages?.map(
-        ({index}: any) => data?.[index - 1],
-      );
-      this.setState({pages: newPages});
-      this.setState({pageKey: (this.state.pageKey + 1) % 2});
-    }
-  }
-
   render() {
     return (
       <>
         {this.props.isFetched && (
-          // <Carousel
-          //   scrollEnabled={true}
-          //   ref={carouselRef}
-          //   data={this.props.subData?.data?.data?.children}
-          //   renderItem={_renderItem}
-          //   inactiveSlideOpacity={1}
-          //   sliderWidth={widthPercentageToDP(100)}
-          //   itemWidth={widthPercentageToDP(100)}
-          //   inactiveSlideScale={1}
-          //   maxToRenderPerBatch={3}
-          //   initialNumToRender={3}
-          //   onSnapToItem={(slideIndex) => setsnapFocusIndex(slideIndex)}
-          //   callbackOffsetMargin={5}
-          //   enableMomentum={false}
-          //   containerCustomStyle={{flex: 1}}
-          //   slideStyle={{flex: 1}}
-          // />
-          <Swiper
-            loop={true}
-            onIndexChanged={(index) => this.onPageChanged(index)}>
-            {this.state.pages.map((item, idx) => {
-              //console.log('pages:   ', this.state.pages);
-              // console.log('item and idx:   ' + item + '   ' + idx);
-              // console.log('curr item:   ', item);
-              console.log('idx:  ', idx);
-              return this._renderItem(item, idx);
-            })}
-          </Swiper>
+          <FlatList
+            pinchGestureEnabled={false}
+            disableScrollViewPanResponder
+            directionalLockEnabled
+            onViewableItemsChanged={(info) =>
+              console.log('Viewable first item:   ', info.viewableitems?.[0])
+            }
+            nestedScrollEnabled
+            disableIntervalMomentum
+            alwaysBounceHorizontal={false}
+            alwaysBounceVertical={false}
+            bounces={false}
+            bouncesZoom={false}
+            pagingEnabled={true}
+            removeClippedSubviews={true}
+            decelerationRate="fast"
+            //  decelerationRate={Platform.OS === 'ios' ? 0 : 0.985}
+            snapToInterval={widthPercentageToDP(100)}
+            snapToAlignment={'center'}
+            horizontal={true}
+            data={this.props.subData?.data?.data?.children}
+            initialNumToRender={1}
+            maxToRenderPerBatch={2}
+            keyExtractor={({item}) => item?.data?.name}
+            renderItem={({item, index}) => this._renderItem(item, index)}
+          />
         )}
       </>
     );

@@ -28,7 +28,7 @@ export default function CollapsibleCommentsRoot({
       }),
     {enabled: !!token && !!item?.data?.permalink},
   );
-  return currentIndex !== index || isLoading ? (
+  return isLoading ? (
     <>
       <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />
       <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />

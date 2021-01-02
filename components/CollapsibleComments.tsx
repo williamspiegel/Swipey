@@ -55,7 +55,7 @@ function Comment({body, layer, children}: any) {
                 <Icon name={'gift'} type={'material-community'} />
               </Pressable>
             </View>
-            <CollapsibleComments layer={layer} children={children} />
+            {/* <CollapsibleComments layer={layer} children={children} /> */}
           </Collapsible>
         </View>
       </Pressable>
