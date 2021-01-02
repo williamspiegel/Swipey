@@ -1,15 +1,14 @@
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {
   FlatList,
   Image,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import {QueryObserverResult, useQuery, useQueryClient} from 'react-query';
+import {useQuery, useQueryClient} from 'react-query';
 import axios from 'axios';
 import he from 'he';
 import WebView from 'react-native-webview';
@@ -65,36 +64,18 @@ const Home = () => {
       }),
     {enabled: !!anonTok},
   );
-  return (
-    <HomeHelper
-      anonTok={anonTok}
-      subData={subData}
-      subAbout={subAbout}
-      isFetched={isFetched}
-    />
-  );
-};
-export class HomeHelper extends React.PureComponent {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      pages: [{}, {}, {}, {}, {}, {}, {}, {}],
-      imgVisible: false,
-      currentUri: {
-        uri: '',
-        s: {
-          y: 960,
-          x: 1280,
-          u: '',
-        },
-      },
-      pageKey: 1,
-      totalIndex: 0,
-      prevIdx: -1,
-    };
-  }
 
-  contentDisplay(item: any) {
+  const [imgVisible, setimgVisible] = useState(false);
+  const [currentUri, setcurrentUri] = useState({
+    uri: '',
+    s: {
+      y: 960,
+      x: 1280,
+      u: '',
+    },
+  });
+
+  const contentDisplay = (item: any) => {
     let imgMet = item?.data?.preview?.images[0].source;
     if (item?.data?.post_hint === 'image') {
       return (
@@ -138,18 +119,18 @@ export class HomeHelper extends React.PureComponent {
             resizeMode={'contain'}
             source={{uri: `${gallery[0].uri}`}}
           />
-          <Modal visible={this.state.imgVisible} transparent={true}>
+          <Modal visible={imgVisible} transparent={true}>
             <ImageViewer
               imageUrls={gallery}
               enableSwipeDown
               swipeDownThreshold={50}
               enablePreload
               onSwipeDown={() => {
-                this.setState({imgVisible: false});
+                setimgVisible(false);
               }}
               onChange={(i?: number) => {
                 if (i) {
-                  this.setState({currentUri: gallery[i]});
+                  setcurrentUri(gallery[i]);
                 }
               }}
             />
@@ -199,9 +180,9 @@ export class HomeHelper extends React.PureComponent {
     else {
       return <Text>Content not Found</Text>;
     }
-  }
+  };
   //const [snapFocusIndex, setsnapFocusIndex] = useState(0);
-  _renderItem(item: any, index: number) {
+  const _renderItem = (item: any, index: number) => {
     console.log(`current item at index ${index}:   `, item);
     return (
       <ScrollView
@@ -219,7 +200,7 @@ export class HomeHelper extends React.PureComponent {
               borderRadius: 100,
             }}
             source={{
-              uri: this.props.subAbout?.data?.data?.community_icon.match(
+              uri: subAbout?.data?.data?.community_icon.match(
                 /.*\.(png|jpg)/,
               )[0],
             }}
@@ -232,7 +213,7 @@ export class HomeHelper extends React.PureComponent {
         <Text h4 style={{padding: 10, fontWeight: 'bold'}}>
           {item?.data?.title}
         </Text>
-        {this.contentDisplay(item)}
+        {contentDisplay(item)}
         <View
           style={{
             flex: 1,
@@ -257,51 +238,44 @@ export class HomeHelper extends React.PureComponent {
           </Pressable>
         </View>
 
-        <CollapsibleCommentsRoot
-          currentIndex={this.state.totalIndex}
-          token={this.props.anonTok}
-          item={item}
-          index={index}
-        />
+        <CollapsibleCommentsRoot token={anonTok} item={item} index={index} />
       </ScrollView>
     );
-  }
+  };
 
-  render() {
-    return (
-      <>
-        {this.props.isFetched && (
-          <FlatList
-            pinchGestureEnabled={false}
-            disableScrollViewPanResponder
-            directionalLockEnabled
-            onViewableItemsChanged={(info) =>
-              console.log('Viewable first item:   ', info.viewableitems?.[0])
-            }
-            nestedScrollEnabled
-            disableIntervalMomentum
-            alwaysBounceHorizontal={false}
-            alwaysBounceVertical={false}
-            bounces={false}
-            bouncesZoom={false}
-            pagingEnabled={true}
-            removeClippedSubviews={true}
-            decelerationRate="fast"
-            //  decelerationRate={Platform.OS === 'ios' ? 0 : 0.985}
-            snapToInterval={widthPercentageToDP(100)}
-            snapToAlignment={'center'}
-            horizontal={true}
-            data={this.props.subData?.data?.data?.children}
-            initialNumToRender={1}
-            maxToRenderPerBatch={2}
-            keyExtractor={({item}) => item?.data?.name}
-            renderItem={({item, index}) => this._renderItem(item, index)}
-          />
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      {isFetched && (
+        <FlatList
+          pinchGestureEnabled={false}
+          disableScrollViewPanResponder
+          directionalLockEnabled
+          onViewableItemsChanged={(info) =>
+            console.log('Viewable first item:   ', info.viewableitems?.[0])
+          }
+          nestedScrollEnabled
+          disableIntervalMomentum
+          alwaysBounceHorizontal={false}
+          alwaysBounceVertical={false}
+          bounces={false}
+          bouncesZoom={false}
+          pagingEnabled={true}
+          removeClippedSubviews={true}
+          decelerationRate="fast"
+          //  decelerationRate={Platform.OS === 'ios' ? 0 : 0.985}
+          snapToInterval={widthPercentageToDP(100)}
+          snapToAlignment={'center'}
+          horizontal={true}
+          data={subData?.data?.data?.children}
+          initialNumToRender={1}
+          maxToRenderPerBatch={2}
+          keyExtractor={({item}) => item?.data?.name}
+          renderItem={({item, index}) => _renderItem(item, index)}
+        />
+      )}
+    </>
+  );
+};
 const styles = StyleSheet.create({
   container: {
     width: widthPercentageToDP(100),

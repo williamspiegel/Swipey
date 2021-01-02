@@ -8,12 +8,7 @@ import {
   heightPercentageToDP,
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
-export default function CollapsibleCommentsRoot({
-  item,
-  token,
-  index,
-  currentIndex,
-}) {
+export default function CollapsibleCommentsRoot({item, token, index}) {
   const queryClient = useQueryClient();
   const {data: comments, isLoading} = useQuery(
     ['comments', token, item?.data?.permalink],
