@@ -1,11 +1,11 @@
-import React, {useRef, useState} from 'react';
+import React, {useCallback, useRef} from 'react';
 import {
   Image,
   MaskedViewBase,
   Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import {QueryObserverResult, useQuery, useQueryClient} from 'react-query';
@@ -13,14 +13,18 @@ import axios from 'axios';
 import he from 'he';
 import WebView from 'react-native-webview';
 import VideoPlayer from 'expo-video-player';
+import {Divider, Icon, Text} from 'react-native-elements';
 import {
   heightPercentageToDP,
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
 import Carousel from 'react-native-snap-carousel';
 import {Audio, Video} from 'expo-av';
-import Markdown from 'react-native-markdown-display';
+import Markdown, {hasParents} from 'react-native-markdown-display';
 import ImageViewer from 'react-native-image-zoom-viewer';
+import CollapsibleComments from '../components/CollapsibleComments';
+import CollapsibleCommentsRoot from '../components/CollapsibleCommentsRoot';
+import Swiper from 'react-native-swiper';
 const config: any = {
   method: 'post',
   url:
@@ -30,17 +34,17 @@ const config: any = {
     Authorization: 'Basic cjNfUlBRNVRIMmJJREE6',
   },
 };
-
 const Home = () => {
   const queryClient = useQueryClient();
   const {data: anon} = useQuery('anon', () => axios(config));
   const anonTok = anon?.data?.access_token;
+  //console.log('token:   ', anonTok);
   const {data: subData, isFetched} = useQuery(
     'subData' + anonTok,
     () =>
       axios({
         method: 'get',
-        url: 'https://oauth.reddit.com/r/dogelore/hot?g=US&after&limit=100',
+        url: 'https://oauth.reddit.com/r/dankmemes/hot?g=US&after&limit=100',
         headers: {
           Authorization: `bearer ${anonTok}`,
           'User-Agent': 'Swipey for Reddit',
@@ -48,6 +52,46 @@ const Home = () => {
       }),
     {enabled: !!anonTok},
   );
+  const {data: subAbout} = useQuery(
+    'subAbout' + anonTok,
+    () =>
+      axios({
+        method: 'get',
+        url: 'https://oauth.reddit.com/r/dankmemes/about',
+        headers: {
+          Authorization: `bearer ${anonTok}`,
+          'User-Agent': 'Swipey for Reddit',
+        },
+      }),
+    {enabled: !!anonTok},
+  );
+  return (
+    <HomeHelper
+      anonTok={anonTok}
+      subData={subData}
+      subAbout={subAbout}
+      isFetched={isFetched}
+    />
+  );
+};
+export class HomeHelper extends React.PureComponent {
+  constructor(props: any) {
+    super(props);
+    this.state = {
+      pages: [{}, {}, {}],
+      imgVisible: false,
+      currentUri: {
+        uri: '',
+        s: {
+          y: 960,
+          x: 1280,
+          u: '',
+        },
+      },
+      pageKey: 1,
+      totalIndex: 0,
+    };
+  }
 
   //children[0].data.media.oembed.html
   // console.log(
@@ -58,40 +102,64 @@ const Home = () => {
   //     )
   //     .match(/src="(?<src>[^\"]*)"/)?.groups['src'],
   // );
-  const [imgVisible, setimgVisible] = useState(false);
-  const [currentUri, setcurrentUri] = useState('');
-  const contentDisplay = (item: any) => {
+
+  contentDisplay(item: any) {
+    let imgMet = item?.data?.preview?.images[0].source;
     if (item?.data?.post_hint === 'image') {
-      return <Image style={{flex: 4}} source={{uri: item.data.url}} />;
+      return (
+        <Image
+          resizeMode={'contain'}
+          style={{
+            width: widthPercentageToDP(100),
+            height: (widthPercentageToDP(100) * imgMet.height) / imgMet.width,
+          }}
+          source={{uri: item.data.url}}
+        />
+      );
     } else if (item?.data?.is_self === true) {
-      return <Markdown>{he.unescape(item?.data?.selftext)}</Markdown>;
+      return (
+        <View style={{padding: 10}}>
+          <Markdown>{he.unescape(item?.data?.selftext)}</Markdown>
+        </View>
+      );
     } else if (item?.data?.is_gallery === true) {
       let meta = item?.data?.media_metadata;
       let gallery = item?.data?.gallery_data?.items?.reduce((acc, c) => {
         acc.push({
-          url:
+          uri:
             'https://i.redd.it/' +
             c.media_id +
             (meta[`${c.media_id}`].m === 'image/jpg' ? '.jpg' : '.png'),
+          s: meta[`${c.media_id}`].s,
         });
         return acc;
       }, []);
-      setcurrentUri(`${gallery[0].url}`);
+      //console.log('gallery struct:   ', gallery[0].uri);
+      // setcurrentUri(gallery[0]);
       return (
         <>
-          <Image source={{uri: currentUri}} />
-          <Modal visible={imgVisible} transparent={true}>
+          <Image
+            style={{
+              width: widthPercentageToDP(100),
+              height:
+                (widthPercentageToDP(100) * gallery[0].s.y) / gallery[0].s.x,
+              backgroundColor: 'green',
+            }}
+            resizeMode={'contain'}
+            source={{uri: `${gallery[0].uri}`}}
+          />
+          <Modal visible={this.state.imgVisible} transparent={true}>
             <ImageViewer
               imageUrls={gallery}
               enableSwipeDown
               swipeDownThreshold={50}
               enablePreload
               onSwipeDown={() => {
-                setimgVisible(false);
+                this.setState({imgVisible: false});
               }}
               onChange={(i?: number) => {
                 if (i) {
-                  setcurrentUri(gallery[i]);
+                  this.setState({currentUri: gallery[i]});
                 }
               }}
             />
@@ -105,73 +173,163 @@ const Home = () => {
       let re = /(DASH_).*(\.mp4)/;
       let audioURL = vid.replace(re, '!audio!');
       return (
-        <VideoPlayer
-          videoProps={{
-            shouldPlay: false,
-            resizeMode: Video.RESIZE_MODE_CONTAIN,
-            source: {
-              uri: vid,
-            },
-          }}
-          showFullscreenButton
-          width={widthPercentageToDP(100)}
-          height={(widthPercentageToDP(100) * 9) / 16}
-          inFullscreen={true}
-        />
+        <View style={styles.container}>
+          <VideoPlayer
+            videoProps={{
+              shouldPlay: false,
+              resizeMode: Video.RESIZE_MODE_CONTAIN,
+              source: {
+                uri: vid,
+              },
+            }}
+            showFullscreenButton
+            width={widthPercentageToDP(100)}
+            height={(widthPercentageToDP(100) * 9) / 16}
+            inFullscreen={true}
+          />
+        </View>
       );
     } else if (item?.data?.media_embed?.content) {
-      <WebView
-        scrollEnabled={false}
-        allowsFullscreenVideo
-        originWhitelist={['*']}
-        source={{
-          uri: he
-            .unescape(item.data.media_embed.content)
-            .match(/src="(?<src>[^\"]*)"/)?.groups['src'],
-        }}
-        style={styles.loginWebView}
-      />;
+      <View style={styles.container}>
+        <WebView
+          scrollEnabled={false}
+          allowsFullscreenVideo
+          originWhitelist={['*']}
+          source={{
+            uri: he
+              .unescape(item.data.media_embed.content)
+              .match(/src="(?<src>[^\"]*)"/)?.groups['src'],
+          }}
+          style={styles.loginWebView}
+        />
+        ;
+      </View>;
     } //else if (true) {
     // }
     else {
       return <Text>Content not Found</Text>;
     }
-  };
-  const _renderItem = ({item, index}: any) => {
+  }
+  //const [snapFocusIndex, setsnapFocusIndex] = useState(0);
+  _renderItem(item: any, index: number) {
     console.log(`current item at index ${index}:   `, item);
     return (
-      <ScrollView>
-        <View style={styles.container}>
-          <Text>{item?.data?.title}</Text>
-          {contentDisplay(item)}
+      <ScrollView style={{paddingTop: 40, flex: 1}}>
+        <View style={{padding: 10, flexDirection: 'row'}}>
+          <Image
+            style={{
+              height: widthPercentageToDP(7),
+              width: widthPercentageToDP(7),
+              backgroundColor: 'green',
+              borderRadius: 100,
+            }}
+            source={{
+              uri: this.props.subAbout?.data?.data?.community_icon.match(
+                /.*\.(png|jpg)/,
+              )[0],
+            }}
+            resizeMode={'contain'}
+          />
+          <Text style={{fontSize: 15, paddingLeft: 5, fontWeight: 'bold'}}>
+            {item?.data?.subreddit_name_prefixed}
+          </Text>
         </View>
-        <View style={{flex: 1, backgroundColor: 'red'}}></View>
+        <Text h4 style={{padding: 10, fontWeight: 'bold'}}>
+          {item?.data?.title}
+        </Text>
+        {this.contentDisplay(item)}
+        <View
+          style={{
+            flex: 1,
+            height: heightPercentageToDP(4),
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+          <Pressable style={{flex: 0.6}}>
+            <Icon name={'gift'} type={'material-community'} />
+          </Pressable>
+          <Pressable style={{flex: 0.6}}>
+            <Icon name={'share'} type={'material-community'} />
+          </Pressable>
+          <Pressable style={{flex: 1}}>
+            <Icon name={'comment'} type={'material-community'} />
+          </Pressable>
+          <Pressable style={{flex: 0.6}}>
+            <Icon name={'arrow-up-bold'} type={'material-community'} />
+          </Pressable>
+          <Pressable style={{flex: 0.6}}>
+            <Icon name={'arrow-down-bold'} type={'material-community'} />
+          </Pressable>
+        </View>
+
+        <CollapsibleCommentsRoot
+          currentIndex={this.state.totalIndex}
+          token={this.props.anonTok}
+          item={item}
+          index={index}
+        />
       </ScrollView>
     );
-  };
-  const carouselRef: any = useRef('');
-  //console.log('sub data:   ', subData);
-  return (
-    <View style={{flex: 1, backgroundColor: 'blue'}}>
-      {isFetched && (
-        <Carousel
-          ref={carouselRef}
-          data={subData?.data?.data?.children}
-          renderItem={_renderItem}
-          layoutCardOffset={50}
-          inactiveSlideOpacity={1}
-          sliderHeight={heightPercentageToDP(100)}
-          itemHeight={heightPercentageToDP(100)}
-          sliderWidth={widthPercentageToDP(100)}
-          itemWidth={widthPercentageToDP(100)}
-        />
-      )}
-    </View>
-  );
-};
+  }
+
+  //console.log('sub data:   ', this.props.subData);
+  onPageChanged(idx: number) {
+    this.setState({totalIndex: idx});
+    let data = this.props.subData?.data?.data?.children;
+    if (idx === 2) {
+      const newPages = this.state.pages?.map(
+        ({index}: any) => data?.[index + 1],
+      );
+      this.setState({pages: newPages});
+      this.setState({pageKey: (this.state.pageKey + 1) % 2});
+    } else if (idx === 0) {
+      const newPages = this.state.pages?.map(
+        ({index}: any) => data?.[index - 1],
+      );
+      this.setState({pages: newPages});
+      this.setState({pageKey: (this.state.pageKey + 1) % 2});
+    }
+  }
+
+  render() {
+    return (
+      <>
+        {this.props.isFetched && (
+          // <Carousel
+          //   scrollEnabled={true}
+          //   ref={carouselRef}
+          //   data={this.props.subData?.data?.data?.children}
+          //   renderItem={_renderItem}
+          //   inactiveSlideOpacity={1}
+          //   sliderWidth={widthPercentageToDP(100)}
+          //   itemWidth={widthPercentageToDP(100)}
+          //   inactiveSlideScale={1}
+          //   maxToRenderPerBatch={3}
+          //   initialNumToRender={3}
+          //   onSnapToItem={(slideIndex) => setsnapFocusIndex(slideIndex)}
+          //   callbackOffsetMargin={5}
+          //   enableMomentum={false}
+          //   containerCustomStyle={{flex: 1}}
+          //   slideStyle={{flex: 1}}
+          // />
+          <Swiper
+            loop={true}
+            onIndexChanged={(index) => this.onPageChanged(index)}>
+            {this.state.pages.map((item, idx) => {
+              //console.log('pages:   ', this.state.pages);
+              // console.log('item and idx:   ' + item + '   ' + idx);
+              // console.log('curr item:   ', item);
+              console.log('idx:  ', idx);
+              return this._renderItem(item, idx);
+            })}
+          </Swiper>
+        )}
+      </>
+    );
+  }
+}
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
     width: widthPercentageToDP(100),
     height: (widthPercentageToDP(100) * 9) / 16,
   },
@@ -179,5 +337,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
 export default Home;

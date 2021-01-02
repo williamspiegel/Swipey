@@ -29,10 +29,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <StatusBar barStyle="dark-content" />
-        {/* <SafeAreaView> */}
         <Home />
-        {/*<BrowsingCarousel redditData={{uwu: 'uwu'}} />*/}
-        {/* </SafeAreaView> */}
       </ThemeProvider>
     </QueryClientProvider>
   );
