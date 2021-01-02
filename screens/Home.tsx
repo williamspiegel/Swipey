@@ -134,7 +134,6 @@ export class HomeHelper extends React.PureComponent {
               width: widthPercentageToDP(100),
               height:
                 (widthPercentageToDP(100) * gallery[0].s.y) / gallery[0].s.x,
-              backgroundColor: 'green',
             }}
             resizeMode={'contain'}
             source={{uri: `${gallery[0].uri}`}}
@@ -217,7 +216,6 @@ export class HomeHelper extends React.PureComponent {
             style={{
               height: widthPercentageToDP(7),
               width: widthPercentageToDP(7),
-              backgroundColor: 'green',
               borderRadius: 100,
             }}
             source={{
