@@ -12,17 +12,19 @@ import {useQuery, useQueryClient} from 'react-query';
 import axios from 'axios';
 import he from 'he';
 import WebView from 'react-native-webview';
-import VideoPlayer from 'expo-video-player';
-import {Divider, Icon, Text} from 'react-native-elements';
+
+import {Card, Divider, Icon, Text} from 'react-native-elements';
 import {
   heightPercentageToDP,
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
-import {Audio, Video} from 'expo-av';
+
 import Markdown, {hasParents} from 'react-native-markdown-display';
 import ImageViewer from 'react-native-image-zoom-viewer';
 
 import CollapsibleCommentsRoot from '../components/CollapsibleCommentsRoot';
+import FastImage from 'react-native-fast-image';
+import ContentDisplay from '../components/ContentDisplay';
 
 const config: any = {
   method: 'post',
@@ -65,135 +67,20 @@ const Home = () => {
     {enabled: !!anonTok},
   );
 
-  const [imgVisible, setimgVisible] = useState(false);
-  const [currentUri, setcurrentUri] = useState({
-    uri: '',
-    s: {
-      y: 960,
-      x: 1280,
-      u: '',
-    },
-  });
-
-  const contentDisplay = (item: any) => {
-    let imgMet = item?.data?.preview?.images[0].source;
-    if (item?.data?.post_hint === 'image') {
-      return (
-        <Image
-          resizeMode={'contain'}
-          style={{
-            width: widthPercentageToDP(100),
-            height: (widthPercentageToDP(100) * imgMet.height) / imgMet.width,
-          }}
-          source={{uri: item.data.url}}
-        />
-      );
-    } else if (item?.data?.is_self === true) {
-      return (
-        <View style={{padding: 10}}>
-          <Markdown>{he.unescape(item?.data?.selftext)}</Markdown>
-        </View>
-      );
-    } else if (item?.data?.is_gallery === true) {
-      let meta = item?.data?.media_metadata;
-      let gallery = item?.data?.gallery_data?.items?.reduce((acc, c) => {
-        acc.push({
-          uri:
-            'https://i.redd.it/' +
-            c.media_id +
-            (meta[`${c.media_id}`].m === 'image/jpg' ? '.jpg' : '.png'),
-          s: meta[`${c.media_id}`].s,
-        });
-        return acc;
-      }, []);
-      //console.log('gallery struct:   ', gallery[0].uri);
-      // setcurrentUri(gallery[0]);
-      return (
-        <>
-          <Image
-            style={{
-              width: widthPercentageToDP(100),
-              height:
-                (widthPercentageToDP(100) * gallery[0].s.y) / gallery[0].s.x,
-            }}
-            resizeMode={'contain'}
-            source={{uri: `${gallery[0].uri}`}}
-          />
-          <Modal visible={imgVisible} transparent={true}>
-            <ImageViewer
-              imageUrls={gallery}
-              enableSwipeDown
-              swipeDownThreshold={50}
-              enablePreload
-              onSwipeDown={() => {
-                setimgVisible(false);
-              }}
-              onChange={(i?: number) => {
-                if (i) {
-                  setcurrentUri(gallery[i]);
-                }
-              }}
-            />
-          </Modal>
-        </>
-      );
-    } else if (item?.data?.post_hint === 'link') {
-      return <Text>insert link post</Text>;
-    } else if (item?.data?.secure_media?.reddit_video?.fallback_url) {
-      let vid = item.data.secure_media.reddit_video.fallback_url;
-      let re = /(DASH_).*(\.mp4)/;
-      let audioURL = vid.replace(re, '!audio!');
-      return (
-        <View style={styles.container}>
-          <VideoPlayer
-            videoProps={{
-              shouldPlay: false,
-              resizeMode: Video.RESIZE_MODE_CONTAIN,
-              source: {
-                uri: vid,
-              },
-            }}
-            showFullscreenButton
-            width={widthPercentageToDP(100)}
-            height={(widthPercentageToDP(100) * 9) / 16}
-            inFullscreen={true}
-          />
-        </View>
-      );
-    } else if (item?.data?.media_embed?.content) {
-      <View style={styles.container}>
-        <WebView
-          scrollEnabled={false}
-          allowsFullscreenVideo
-          originWhitelist={['*']}
-          source={{
-            uri: he
-              .unescape(item.data.media_embed.content)
-              .match(/src="(?<src>[^\"]*)"/)?.groups['src'],
-          }}
-          style={styles.loginWebView}
-        />
-        ;
-      </View>;
-    } //else if (true) {
-    // }
-    else {
-      return <Text>Content not Found</Text>;
-    }
-  };
-  //const [snapFocusIndex, setsnapFocusIndex] = useState(0);
+  const [snapFocusIndex, setsnapFocusIndex] = useState(0);
   const _renderItem = (item: any, index: number) => {
-    console.log(`current item at index ${index}:   `, item);
+    // console.log(`current item at index ${index}:   `, item);
     return (
       <ScrollView
+        collapsable
         directionalLockEnabled
         style={{
           paddingTop: 40,
           height: heightPercentageToDP(100),
           width: widthPercentageToDP(100),
         }}>
-        <View style={{padding: 10, flexDirection: 'row'}}>
-          <Image
+        <View collapsable style={{padding: 10, flexDirection: 'row', flex: 1}}>
+          <FastImage
             style={{
               height: widthPercentageToDP(7),
               width: widthPercentageToDP(7),
@@ -206,39 +93,88 @@ const Home = () => {
             }}
             resizeMode={'contain'}
           />
-          <Text style={{fontSize: 15, paddingLeft: 5, fontWeight: 'bold'}}>
-            {item?.data?.subreddit_name_prefixed}
-          </Text>
+          <View>
+            <Text style={{fontSize: 15, paddingLeft: 5, fontWeight: 'bold'}}>
+              {item?.data?.subreddit_name_prefixed}
+            </Text>
+
+            <Text style={{paddingLeft: 5}}>
+              by{'   '}
+              {item?.data?.author}
+            </Text>
+          </View>
         </View>
-        <Text h4 style={{padding: 10, fontWeight: 'bold'}}>
+
+        <Text
+          h4
+          style={{
+            flexDirection: 'row-reverse',
+            padding: 10,
+            fontWeight: 'bold',
+          }}>
           {item?.data?.title}
         </Text>
-        {contentDisplay(item)}
+        <ContentDisplay item={item} />
         <View
+          collapsable
           style={{
             flex: 1,
             height: heightPercentageToDP(4),
             flexDirection: 'row',
             alignItems: 'center',
+            paddingTop: heightPercentageToDP(1),
           }}>
-          <Pressable style={{flex: 0.6}}>
-            <Icon name={'gift'} type={'material-community'} />
-          </Pressable>
-          <Pressable style={{flex: 0.6}}>
-            <Icon name={'share'} type={'material-community'} />
+          <Pressable style={{flex: 1}}>
+            <Icon
+              size={widthPercentageToDP(7)}
+              name={'gift'}
+              type={'material-community'}
+            />
           </Pressable>
           <Pressable style={{flex: 1}}>
-            <Icon name={'comment'} type={'material-community'} />
+            <Icon
+              size={widthPercentageToDP(7)}
+              name={'share'}
+              type={'material-community'}
+            />
           </Pressable>
-          <Pressable style={{flex: 0.6}}>
-            <Icon name={'arrow-up-bold'} type={'material-community'} />
+          <Pressable style={{flex: 2}}>
+            <Icon
+              size={widthPercentageToDP(7)}
+              name={'comment'}
+              type={'material-community'}
+            />
           </Pressable>
-          <Pressable style={{flex: 0.6}}>
-            <Icon name={'arrow-down-bold'} type={'material-community'} />
+          <Pressable collapsable style={{flex: 1}}>
+            <Icon
+              size={widthPercentageToDP(8)}
+              name={'arrow-up-bold'}
+              type={'material-community'}
+            />
+          </Pressable>
+          <View collapsable>
+            <Text adjustsFontSizeToFit numberOfLines={1} ellipsizeMode={'clip'}>
+              {item?.data?.score < 1000
+                ? item?.data?.score
+                : Number.parseFloat(item?.data?.score / 1000).toFixed(1) + 'k'}
+            </Text>
+          </View>
+
+          <Pressable collapsable style={{flex: 1}}>
+            <Icon
+              size={widthPercentageToDP(8)}
+              name={'arrow-down-bold'}
+              type={'material-community'}
+            />
           </Pressable>
         </View>
 
-        <CollapsibleCommentsRoot token={anonTok} item={item} index={index} />
+        <CollapsibleCommentsRoot
+          currentIndex={snapFocusIndex}
+          token={anonTok}
+          item={item}
+          index={index}
+        />
       </ScrollView>
     );
   };
@@ -246,43 +182,71 @@ const Home = () => {
   return (
     <>
       {isFetched && (
-        <FlatList
-          pinchGestureEnabled={false}
-          disableScrollViewPanResponder
-          directionalLockEnabled
-          onViewableItemsChanged={(info) =>
-            console.log('Viewable first item:   ', info.viewableitems?.[0])
-          }
-          nestedScrollEnabled
-          disableIntervalMomentum
-          alwaysBounceHorizontal={false}
-          alwaysBounceVertical={false}
-          bounces={false}
-          bouncesZoom={false}
-          pagingEnabled={true}
-          removeClippedSubviews={true}
-          decelerationRate="fast"
-          //  decelerationRate={Platform.OS === 'ios' ? 0 : 0.985}
-          snapToInterval={widthPercentageToDP(100)}
-          snapToAlignment={'center'}
-          horizontal={true}
-          data={subData?.data?.data?.children}
-          initialNumToRender={1}
-          maxToRenderPerBatch={2}
-          keyExtractor={({item}) => item?.data?.name}
-          renderItem={({item, index}) => _renderItem(item, index)}
-        />
+        <>
+          <FlatList
+            collapsable
+            onMomentumScrollEnd={(event) => {
+              let ret = setsnapFocusIndex(
+                Math.round(
+                  event.nativeEvent.contentOffset.x / widthPercentageToDP(100),
+                ),
+              );
+              // console.log('triggered index:   ', widthPercentageToDP(100));
+              return ret;
+            }}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            windowSize={5}
+            pinchGestureEnabled={false}
+            disableScrollViewPanResponder
+            directionalLockEnabled
+            nestedScrollEnabled
+            disableIntervalMomentum
+            alwaysBounceHorizontal={false}
+            alwaysBounceVertical={false}
+            bounces={false}
+            bouncesZoom={false}
+            pagingEnabled={true}
+            removeClippedSubviews={true}
+            decelerationRate="fast"
+            //  decelerationRate={Platform.OS === 'ios' ? 0 : 0.985}
+            snapToInterval={widthPercentageToDP(100)}
+            snapToAlignment={'center'}
+            horizontal={true}
+            data={subData?.data?.data?.children}
+            initialNumToRender={1}
+            maxToRenderPerBatch={2}
+            // keyExtractor={({item}) => item?.data?.id}
+            renderItem={({item, index}) => _renderItem(item, index)}
+          />
+          <View
+            style={{
+              borderRadius: 20,
+              width: widthPercentageToDP(100),
+              height: heightPercentageToDP(8),
+              backgroundColor: 'gray',
+              bottom: 0,
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'absolute',
+            }}>
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 5,
+                height: heightPercentageToDP(4),
+                width: widthPercentageToDP(75),
+                borderRadius: 100,
+                backgroundColor: 'white',
+              }}>
+              <Text>Comment here...</Text>
+            </View>
+          </View>
+        </>
       )}
     </>
   );
 };
-const styles = StyleSheet.create({
-  container: {
-    width: widthPercentageToDP(100),
-    height: (widthPercentageToDP(100) * 9) / 16,
-  },
-  loginWebView: {
-    flex: 1,
-  },
-});
+
 export default Home;
