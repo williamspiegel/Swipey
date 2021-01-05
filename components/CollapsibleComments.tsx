@@ -85,9 +85,9 @@ const Comment = React.memo(
     id,
     state,
   }: any) => {
-    const {data: commenter, isFetched} = useQuery(userName, () =>
-      axios.get(`https://www.reddit.com/user/${userName}/about.json`),
-    );
+    // const {data: commenter, isFetched} = useQuery(userName, () =>
+    //   axios.get(`https://www.reddit.com/user/${userName}/about.json`),
+    // );
     //console.log('commenter:   ', commenter);
     if (isCollapsed) {
       return (
@@ -111,9 +111,11 @@ const Comment = React.memo(
               height: widthPercentageToDP(5),
             }}
             source={{
-              uri: isFetched
-                ? commenter?.data?.data?.snoovatar_img
-                : 'https://www.redditstatic.com/avatars/avatar_default_17_46A508.png',
+              //   uri: isFetched
+              //     ? commenter?.data?.data?.snoovatar_img
+              //     :
+              uri:
+                'https://www.redditstatic.com/avatars/avatar_default_17_46A508.png',
 
               priority: FastImage.priority.low,
             }}
@@ -215,9 +217,11 @@ const Comment = React.memo(
                       height: widthPercentageToDP(8),
                     }}
                     source={{
-                      uri: isFetched
-                        ? commenter?.data?.data?.snoovatar_img
-                        : 'https://www.redditstatic.com/avatars/avatar_default_17_46A508.png',
+                      //   uri: isFetched
+                      //     ? commenter?.data?.data?.snoovatar_img
+                      //     :
+                      uri:
+                        'https://www.redditstatic.com/avatars/avatar_default_17_46A508.png',
 
                       priority: FastImage.priority.low,
                     }}
