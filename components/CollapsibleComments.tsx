@@ -97,6 +97,8 @@ const Comment = React.memo(
             backgroundColor: '#9e9e9e',
             alignItems: 'flex-start',
             flexDirection: 'row',
+            paddingLeft: 10,
+            paddingTop: 5,
           }}
           onPress={() => dispatch({type: 'collapse', commentID: id + userName})}
           delayLongPress={200}
@@ -104,23 +106,6 @@ const Comment = React.memo(
             Vibration.vibrate(1);
             dispatch({type: 'toggleCollapse', commentID: id + userName});
           }}>
-          <FastImage
-            style={{
-              borderRadius: 100,
-              width: widthPercentageToDP(5),
-              height: widthPercentageToDP(5),
-            }}
-            source={{
-              //   uri: isFetched
-              //     ? commenter?.data?.data?.snoovatar_img
-              //     :
-              uri:
-                'https://www.redditstatic.com/avatars/avatar_default_17_46A508.png',
-
-              priority: FastImage.priority.low,
-            }}
-          />
-
           <Text
             style={{flex: 2}}
             style={{fontWeight: 'bold'}}
@@ -141,12 +126,7 @@ const Comment = React.memo(
           />
         </Pressable>
       );
-    } else if (
-      !isCollapsed ||
-      kind !== 'more' ||
-      !children ||
-      children !== []
-    ) {
+    } else if (kind !== 'more') {
       return (
         <>
           <Pressable
@@ -205,34 +185,20 @@ const Comment = React.memo(
                 </Pressable>
                 <View
                   style={{
-                    flex: 1,
+                    borderRadius: 100,
+                    backgroundColor: 'rgb(200,200,200)',
+                    position: 'absolute',
+                    right: 0,
                     flexDirection: 'row',
                     justifyContent: 'flex-start',
                   }}>
-                  <FastImage
-                    style={{
-                      backgroundColor: 'gray',
-                      borderRadius: 100,
-                      width: widthPercentageToDP(8),
-                      height: widthPercentageToDP(8),
-                    }}
-                    source={{
-                      //   uri: isFetched
-                      //     ? commenter?.data?.data?.snoovatar_img
-                      //     :
-                      uri:
-                        'https://www.redditstatic.com/avatars/avatar_default_17_46A508.png',
-
-                      priority: FastImage.priority.low,
-                    }}
-                  />
                   <Text
                     numberOfLines={1}
                     ellipsizeMode={'tail'}
                     style={{
                       fontWeight: 'bold',
-                      paddingLeft: 10,
-                      paddingRight: 3,
+                      paddingLeft: 5,
+                      paddingRight: 5,
                       alignSelf: 'center',
                     }}>
                     {userName}

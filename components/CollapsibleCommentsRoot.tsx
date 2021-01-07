@@ -16,7 +16,7 @@ export default function CollapsibleCommentsRoot({
   index,
   currentIndex,
 }) {
-  const queryClient = useQueryClient();
+  //const queryClient = useQueryClient();
 
   const {data: comments, isLoading} = useQuery(
     ['comments', token, item?.data?.permalink],
