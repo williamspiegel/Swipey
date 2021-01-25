@@ -26,7 +26,8 @@ const ContentDisplay = React.memo(({item}: any) => {
         style={{
           width: widthPercentageToDP(100),
           height:
-            (widthPercentageToDP(100) * imgMet.height || 1) / imgMet.width || 1,
+            (widthPercentageToDP(100) * imgMet.height || 1) /
+            (imgMet.width === 0 ? 1 : imgMet.width),
         }}
         source={{uri: item.data.url, priority: FastImage.priority.high}}
       />

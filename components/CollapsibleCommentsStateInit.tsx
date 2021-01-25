@@ -4,7 +4,7 @@ import CollapsibleComments from './CollapsibleComments';
 function reducer(state, {type, commentID}: any) {
   console.log('dispatch:   ', type, commentID);
   let newState = {...state};
-  if (!commentID) {
+  if (!commentID || !newState[commentID]) {
     return newState;
   }
   switch (type) {
