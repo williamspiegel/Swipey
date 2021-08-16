@@ -1,23 +1,14 @@
 import axios from 'axios';
-import React, {useReducer} from 'react';
+import React, {useState} from 'react';
 import {View} from 'react-native';
-import {useQuery, useQueryClient} from 'react-query';
+import {useQuery} from 'react-query';
 import CollapsibleComments from './CollapsibleComments';
 import {List} from 'react-content-loader/native';
-import {
-  heightPercentageToDP,
-  widthPercentageToDP,
-} from 'react-native-responsive-screen';
-import CollapsibleCommentsStateInit from './CollapsibleCommentsStateInit';
 
-export default function CollapsibleCommentsRoot({
-  item,
-  token,
-  index,
-  currentIndex,
-}) {
+export default function CollapsibleCommentsRoot({item, token}: any) {
+  //index
   //const queryClient = useQueryClient();
-
+  const [isCollapsed, setIsCollapsed] = useState({});
   const {data: comments, isLoading} = useQuery(
     ['comments', token, item?.data?.permalink],
     () =>
@@ -32,17 +23,30 @@ export default function CollapsibleCommentsRoot({
     {enabled: !!token && !!item?.data?.permalink},
   );
 
-  return currentIndex < index - 1 || currentIndex > index + 1 || isLoading ? (
-    <>
-      <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />
-      <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />
-      <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />
-    </>
-  ) : (
-    <View
-      collapsable
-      style={{padding: 10, paddingLeft: 0, paddingRight: 0, paddingBottom: 80}}>
-      <CollapsibleCommentsStateInit comments={comments} />
-    </View>
-  );
+  if (isLoading) {
+    return (
+      <>
+        <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />
+        <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />
+        <List viewBox={`25 0 100 80`} speed={0.6} backgroundColor={'#9e9e9e'} />
+      </>
+    );
+  } else {
+    return (
+      <View
+        collapsable
+        style={{
+          padding: 10,
+          paddingLeft: 0,
+          paddingRight: 0,
+          paddingBottom: 80,
+        }}>
+        <CollapsibleComments
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+          children={comments?.data[1]?.data?.children}
+        />
+      </View>
+    );
+  }
 }

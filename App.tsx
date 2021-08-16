@@ -9,11 +9,9 @@
  */
 
 import React from 'react';
-import {SafeAreaView, ScrollView, View, Text, StatusBar} from 'react-native';
-const axios = require('axios');
+import {StatusBar} from 'react-native';
 import {ThemeProvider} from 'react-native-elements';
-import BrowsingCarousel from './components/BrowsingCarousel';
-import {QueryClient, QueryClientProvider, useQuery} from 'react-query';
+import {QueryClient, QueryClientProvider} from 'react-query';
 import Home from './screens/Home';
 
 declare const global: {HermesInternal: null | {}};

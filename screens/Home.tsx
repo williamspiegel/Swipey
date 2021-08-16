@@ -1,41 +1,28 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 //import {LargeList} from 'react-native-largelist-v3';
-import Carousel from 'react-native-snap-carousel';
-import {
-  FlatList,
-  Image,
-  Linking,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import {useQueries, useQuery, useQueryClient} from 'react-query';
+import {Pressable, ScrollView, View} from 'react-native';
+import {useQuery, useQueryClient} from 'react-query';
 import axios from 'axios';
 import he from 'he';
-import WebView from 'react-native-webview';
-
-import {Card, Divider, Icon, Text} from 'react-native-elements';
+//import WebView from 'react-native-webview';
+import {Icon, Text} from 'react-native-elements';
 import {
   heightPercentageToDP,
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
 
-import Markdown, {hasParents} from 'react-native-markdown-display';
-import ImageViewer from 'react-native-image-zoom-viewer';
-
+//import ImageViewer from 'react-native-image-zoom-viewer';
 import CollapsibleCommentsRoot from '../components/CollapsibleCommentsRoot';
 import FastImage from 'react-native-fast-image';
 import ContentDisplay from '../components/ContentDisplay';
-import BottomSheet, {useBottomSheet} from '@gorhom/bottom-sheet';
+import BottomSheet from '@gorhom/bottom-sheet';
 import BottomContent from '../utils/enums';
 import {makeRedirectUri, ResponseType, useAuthRequest} from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 //import {OptimizedFlatList} from 'react-native-optimized-flatlist';
-import {RecyclerListView, DataProvider, LayoutProvider} from 'recyclerlistview';
-import ViewPager from '@react-native-community/viewpager';
+import {DataProvider, LayoutProvider, RecyclerListView} from 'recyclerlistview';
+
 WebBrowser.maybeCompleteAuthSession();
 
 const config: any = {
@@ -61,33 +48,52 @@ const discovery = {
   authorizationEndpoint: 'https://www.reddit.com/api/v1/authorize.compact',
   tokenEndpoint: 'https://www.reddit.com/api/v1/access_token',
 };
-
+const fullWidth = widthPercentageToDP(100);
 const Home = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loggedInAuthToken, setLoggedInAuthToken] = useState('');
+  useEffect(() => {
+    AsyncStorage.getItem('userToken').then((val) => {
+      console.log('got user token:  ', val);
+      queryClient.invalidateQueries();
+      if (val === null) {
+        setIsLoggedIn(false);
+      } else {
+        setIsLoggedIn(true);
+        setLoggedInAuthToken(val);
+      }
+    });
+  }, []);
+
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const carouselRef = useRef();
   const [bottomContent, setbottomContent] = useState(BottomContent.Subs);
   const queryClient = useQueryClient();
   const {data: userTok, isSuccess: userSuccess} = useQuery('userTok', () => {
     return AsyncStorage.getItem('userToken').then((val) => {
-      return val ? val : axios(config);
+      if (val) {
+        return val;
+      } else {
+        console.log('you are not logged in');
+        return null;
+      }
     });
   });
   const utok = userTok?.data?.access_token;
   //console.log('utok:   ', utok);
-  const {data: anon, isFetched: anonFetched} = useQuery(
+  const {data: anon} = useQuery(
     'anon',
     () => {
-      return AsyncStorage.getItem('userToken').then((val) => {
+      return AsyncStorage.getItem('userToken').then((val: any) => {
         return val ? val : axios(config);
       });
     },
     {enabled: !!!utok},
   );
 
-  const loginCallback = () => useQuery('userLogin');
+  //const loginCallback = () => useQuery('userLogin');
   const anonTok = anon?.data?.access_token;
   //console.log('token:   ', anonTok);
-  const isLoggedIn = () => !!utok;
+
   const getTok = () => (userSuccess ? utok : anonTok);
   const [request, response, promptAsync] = useAuthRequest(
     {
@@ -132,26 +138,42 @@ const Home = () => {
   );
   React.useEffect(() => {
     if (response?.type === 'success') {
-      console.log('cum');
       const {access_token} = response.params;
-      AsyncStorage.setItem('userTok', access_token);
+      console.log('login is successful: new access token: ', access_token);
       queryClient.invalidateQueries();
+      AsyncStorage.setItem('userToken', access_token).then(() =>
+        console.log('access token successfully stored'),
+      );
+      setIsLoggedIn(true);
+      setLoggedInAuthToken(access_token);
     }
   }, [response]);
+  const [dataProvider, setDataProvider] = useState(
+    new DataProvider((r1, r2) => {
+      return r1.data.id !== r2.data.id;
+    }),
+  );
+
   const {data: subData, isSuccess: subSuccess} = useQuery(
-    'subData' + getTok(),
+    'subData' + loggedInAuthToken,
     () => {
-      console.log('sup nibba we in:  ', getTok(), utok);
+      console.log('sup nibba we in:  ', loggedInAuthToken);
       return axios({
         method: 'get',
         url: 'https://oauth.reddit.com/r/dankmemes/hot?g=US&after&limit=100',
         headers: {
-          Authorization: `bearer ${getTok()}`,
+          Authorization: `bearer ${anonTok || loggedInAuthToken}`, // ${loggedInAuthToken}`,
           'User-Agent': 'Swipey for Reddit',
         },
-      });
+      })
+        .then((ret) => {
+          setDataProvider(dataProvider.cloneWithRows(ret.data.data.children));
+          console.log('dataProvider set');
+          return ret;
+        })
+        .catch((err) => console.log('sub fetch error:  ', err));
     },
-    {enabled: !!anonTok || isLoggedIn()},
+    {enabled: isLoggedIn || !!anonTok},
   );
   const {data: subAbout, isSuccess: subFetched} = useQuery(
     'subAbout' + getTok(),
@@ -160,11 +182,11 @@ const Home = () => {
         method: 'get',
         url: 'https://oauth.reddit.com/r/dankmemes/about',
         headers: {
-          Authorization: `bearer ${getTok()}`,
+          Authorization: `bearer ${anonTok || loggedInAuthToken}`,
           'User-Agent': 'Swipey for Reddit',
         },
       }),
-    {enabled: !!anonTok || isLoggedIn()},
+    {enabled: isLoggedIn || !!anonTok},
   );
   const _layoutProvider = new LayoutProvider(
     () => {
@@ -175,19 +197,19 @@ const Home = () => {
       dim.width = widthPercentageToDP(100);
     },
   );
-  const [snapFocusIndex, setsnapFocusIndex] = useState(0);
-  const _renderItem = (item: any, index: number) => {
+
+  const _renderItem = (type: string, item: any, index: number) => {
     // console.log(`current item at index ${index?.data?.all_awardings}`);
-    console.log('index:    ', index);
+    //  console.log('index:    ', index);
     return (
       <ScrollView
         collapsable
-        directionalLockEnabled
         style={{
           paddingTop: 40,
           height: heightPercentageToDP(100),
           width: widthPercentageToDP(100),
         }}>
+        {/*<>*/}
         <View collapsable style={{padding: 10, flexDirection: 'row', flex: 1}}>
           <FastImage
             style={{
@@ -212,7 +234,7 @@ const Home = () => {
               {item?.data?.author}
             </Text>
           </View>
-          {item?.data?.all_awardings?.slice(0, 100).map((i) => {
+          {item?.data?.all_awardings?.slice(0, 100).map((i: any) => {
             return (
               <FastImage
                 style={{
@@ -238,12 +260,14 @@ const Home = () => {
           }}>
           {item?.data?.title}
         </Text>
+
         <ContentDisplay item={item} />
+
         <View
           collapsable
           style={{
             flex: 1,
-            height: heightPercentageToDP(4),
+            height: heightPercentageToDP(6),
             flexDirection: 'row',
             alignItems: 'center',
             paddingTop: heightPercentageToDP(1),
@@ -293,8 +317,7 @@ const Home = () => {
           </Pressable>
         </View>
         <CollapsibleCommentsRoot
-          currentIndex={snapFocusIndex}
-          token={anonTok}
+          token={anonTok || loggedInAuthToken}
           item={item}
           index={index}
         />
@@ -302,19 +325,19 @@ const Home = () => {
     );
   };
   const {data: subsDat, isSuccess: subsSuccess} = useQuery(
-    'subs' + getTok(),
+    'subs' + loggedInAuthToken,
     () => {
       // console.log('sup nibba we in:  ', getTok(), utok);
       return axios({
         method: 'get',
         url: 'https://oauth.reddit.com/subreddits/mine/subscriber',
         headers: {
-          Authorization: `bearer ${getTok()}`,
+          Authorization: `bearer ${anonTok || loggedInAuthToken}`,
           'User-Agent': 'Swipey for Reddit',
         },
       });
     },
-    {enabled: isLoggedIn()},
+    {enabled: isLoggedIn},
   );
   const bottomSheetDisplay = () => {
     // let uuid =
@@ -345,6 +368,7 @@ const Home = () => {
       return subsSuccess ? (
         <Text>daddy yes we in: {subsDat?.data?.children}</Text>
       ) : (
+        // <BottomSheetFlatList/>
         <Text>daddy no</Text>
       );
     } else {
@@ -354,63 +378,24 @@ const Home = () => {
   const snapPoints = useMemo(() => [-50, '25%', '50%', '100%'], []);
   // const {expand} = useBottomSheet();
   // console.log('sub pls:   ', subData?.data, subSuccess, subFetched);
-  let dataProvider = new DataProvider((r1, r2) => {
-    return r1.data.id !== r2.data.id;
-  });
+  // const _momentumFun = (event: any) => {
+  //   snapFocusIndex.current = Math.round(
+  //     event.nativeEvent.contentOffset.x / widthPercentageToDP(100),
+  //   );
 
+  // console.log('triggered index:   ', widthPercentageToDP(100));
+  // };
   return (
     <>
+      {console.log('rerender')}
       {subSuccess && subFetched && subData?.data?.data?.children && (
         <>
-          <FlatList
-            collapsable
-            onMomentumScrollEnd={(event) => {
-              let ret = setsnapFocusIndex(
-                Math.round(
-                  event.nativeEvent.contentOffset.x / widthPercentageToDP(100),
-                ),
-              );
-              // console.log('triggered index:   ', widthPercentageToDP(100));
-              return ret;
-            }}
-            // getItemLayout={(data, index) => {
-            //   return {
-            //     length: widthPercentageToDP(100),
-            //     offset: widthPercentageToDP(100) * index,
-            //     index,
-            //   };
-            // }}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            windowSize={5}
-            pinchGestureEnabled={false}
-            disableScrollViewPanResponder
-            directionalLockEnabled
-            nestedScrollEnabled
-            disableIntervalMomentum
-            alwaysBounceHorizontal={false}
-            alwaysBounceVertical={false}
-            bounces={false}
-            bouncesZoom={false}
-            pagingEnabled={true}
-            removeClippedSubviews={true}
-            decelerationRate="fast"
-            //  decelerationRate={Platform.OS === 'ios' ? 0 : 0.985}
-            snapToInterval={widthPercentageToDP(100)}
-            snapToAlignment={'center'}
-            horizontal={true}
-            data={subData?.data?.data?.children}
-            initialNumToRender={1}
-            maxToRenderPerBatch={2}
-            // keyExtractor={({item, index}) => `${item?.data?.id}${index}`}
-            renderItem={({item, index}) => _renderItem(item, index)}
-          />
-          {/* 
           <RecyclerListView
             scrollViewProps={{
+              //  onMomentumScrollEnd: _momentumFun,
               showsHorizontalScrollIndicator: false,
               showsVerticalScrollIndicator: false,
-              // windowSize: 5,
+              //windowSize: 10,
               pinchGestureEnabled: false,
               disableScrollViewPanResponder: true,
               directionalLockEnabled: true,
@@ -421,25 +406,25 @@ const Home = () => {
               bounces: false,
               bouncesZoom: false,
               pagingEnabled: true,
-              //   removeClippedSubviews: true,
+              // removeClippedSubviews: true,
               decelerationRate: 'fast',
-              //  decelerationRate:{Platform.OS === 'ios' ? 0 : 0.985}
-              snapToInterval: widthPercentageToDP(100),
-              snapToAlignment: 'center',
+              //decelerationRate:{Platform.OS === 'ios' ? 0 : 0.985},
+              snapToInterval: fullWidth,
+              // snapToAlignment: 'center',
               horizontal: true,
             }}
             isHorizontal
+            //  renderAheadOffset={2}
             layoutProvider={_layoutProvider}
-            dataProvider={dataProvider.cloneWithRows(
-              subData.data.data.children,
-            )}
-            rowRenderer={(item, index) => _renderItem(item, index)}
-          /> */}
-
+            dataProvider={dataProvider}
+            rowRenderer={(type, data, index) => _renderItem(type, data, index)}
+          />
           <View
             style={{
               flexDirection: 'row',
               borderRadius: 20,
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
               width: widthPercentageToDP(100),
               height: heightPercentageToDP(8),
               backgroundColor: 'gray',
@@ -448,23 +433,11 @@ const Home = () => {
               alignItems: 'center',
               position: 'absolute',
             }}>
-            {/* <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 5,
-                height: heightPercentageToDP(4),
-                width: widthPercentageToDP(75),
-                borderRadius: 100,
-                backgroundColor: 'white',
-              }}>
-              <Text>Comment here...</Text>
-            </View> */}
             <Pressable style={{flex: 2}}>
               <Icon
+                onPress={() => promptAsync()}
                 size={widthPercentageToDP(7)}
-                name={'comment'}
+                name={'account-circle'}
                 type={'material-community'}
               />
             </Pressable>
@@ -477,7 +450,7 @@ const Home = () => {
             </Pressable>
             <Pressable
               onPress={() => {
-                if (isLoggedIn()) {
+                if (isLoggedIn) {
                   setbottomContent(BottomContent.Subs);
                   bottomSheetRef.current?.snapTo(1);
                 } else {

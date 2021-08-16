@@ -5,10 +5,10 @@ import FastImage from 'react-native-fast-image';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import Markdown from 'react-native-markdown-display';
 import {widthPercentageToDP} from 'react-native-responsive-screen';
-import VideoPlayer from 'expo-video-player';
-import {Audio, Video} from 'expo-av';
-import WebView from 'react-native-webview';
-const ContentDisplay = React.memo(({item}: any) => {
+import VideoPlayer from 'react-native-video-controls';
+import {decode} from 'html-entities';
+
+const ContentDisplay = React.memo(({item, navigator}) => {
   const [imgVisible, setimgVisible] = useState(false);
   const [currentUri, setcurrentUri] = useState({
     uri: '',
@@ -18,9 +18,11 @@ const ContentDisplay = React.memo(({item}: any) => {
       u: '',
     },
   });
+
   let imgMet = item?.data?.preview?.images[0].source;
-  if (item?.data?.post_hint === 'image') {
+  if (item?.data?.post_hint === 'image' && !item?.data?.url?.match(/gif/)) {
     return (
+      // <></>
       <FastImage
         resizeMode={'contain'}
         style={{
@@ -40,16 +42,19 @@ const ContentDisplay = React.memo(({item}: any) => {
     );
   } else if (item?.data?.is_gallery === true) {
     let meta = item?.data?.media_metadata;
-    let gallery = item?.data?.gallery_data?.items?.reduce((acc, c) => {
-      acc.push({
-        uri:
-          'https://i.redd.it/' +
-          c.media_id +
-          (meta[`${c.media_id}`].m === 'image/jpg' ? '.jpg' : '.png'),
-        s: meta[`${c.media_id}`].s,
-      });
-      return acc;
-    }, []);
+    let gallery = item?.data?.gallery_data?.items?.reduce(
+      (acc: any, c: any) => {
+        acc.push({
+          uri:
+            'https://i.redd.it/' +
+            c.media_id +
+            (meta[`${c.media_id}`].m === 'image/jpg' ? '.jpg' : '.png'),
+          s: meta[`${c.media_id}`].s,
+        });
+        return acc;
+      },
+      [],
+    );
     //console.log('gallery struct:   ', gallery[0].uri);
     // setcurrentUri(gallery[0]);
     return (
@@ -86,24 +91,36 @@ const ContentDisplay = React.memo(({item}: any) => {
     );
   } else if (item?.data?.post_hint === 'link') {
     return <Text>insert link post</Text>;
-  } else if (item?.data?.secure_media?.reddit_video?.fallback_url) {
-    let vid = item.data.secure_media.reddit_video.fallback_url;
+  } else if (
+    item?.data?.url?.match(/gif/) ||
+    item?.data?.secure_media?.reddit_video?.fallback_url
+  ) {
+    const isGif: boolean = !!item?.data?.url?.match(/gif/);
+    let vid =
+      item?.data?.secure_media?.reddit_video?.fallback_url ||
+      decode(item?.data?.preview?.images[0]?.variants?.mp4?.source?.url);
+
+    console.log('current vid:   ', vid);
     // let re = /(DASH_).*(\.mp4)/;
     // let audioURL = vid.replace(re, '!audio!');
     return (
       <View collapsable style={styles.container}>
         <VideoPlayer
-          videoProps={{
-            shouldPlay: false,
-            resizeMode: Video.RESIZE_MODE_CONTAIN,
-            source: {
-              uri: vid,
-            },
-          }}
-          showFullscreenButton
-          width={widthPercentageToDP(100)}
-          height={(widthPercentageToDP(100) * 9) / 16}
-          inFullscreen={true}
+          // videoProps={{
+          //   shouldPlay: false,
+          //   resizeMode: Video.RESIZE_MODE_CONTAIN,
+          //   source: {
+          //     uri: vid,
+          //   },
+          // }}
+          // showFullscreenButton
+          // width={widthPercentageToDP(100)}
+          // height={(widthPercentageToDP(100) * 9) / 16}
+          // inFullscreen={true}
+          source={{uri: vid}}
+          navigator={navigator}
+          showOnStart={false}
+          repeat={isGif}
         />
       </View>
     );

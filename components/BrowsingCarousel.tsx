@@ -3,8 +3,8 @@ import Carousel from 'react-native-snap-carousel';
 import {View} from 'react-native';
 import {Text} from 'react-native-elements';
 import {
-  widthPercentageToDP as wp,
   heightPercentageToDP as hp,
+  widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
 
 const BrowsingCarousel = ({redditData}) => {
