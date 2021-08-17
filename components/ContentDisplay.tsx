@@ -7,6 +7,7 @@ import Markdown from 'react-native-markdown-display';
 import {widthPercentageToDP} from 'react-native-responsive-screen';
 import VideoPlayer from 'react-native-video-controls';
 import {decode} from 'html-entities';
+import RNUrlPreview from 'react-native-url-preview';
 
 const ContentDisplay = React.memo(({item, navigator}) => {
   const [imgVisible, setimgVisible] = useState(false);
@@ -89,8 +90,6 @@ const ContentDisplay = React.memo(({item, navigator}) => {
         </Modal>
       </>
     );
-  } else if (item?.data?.post_hint === 'link') {
-    return <Text>insert link post</Text>;
   } else if (
     item?.data?.url?.match(/gif/) ||
     item?.data?.secure_media?.reddit_video?.fallback_url
@@ -113,16 +112,29 @@ const ContentDisplay = React.memo(({item, navigator}) => {
           //     uri: vid,
           //   },
           // }}
-          // showFullscreenButton
+          showFullscreenButton={false}
           // width={widthPercentageToDP(100)}
           // height={(widthPercentageToDP(100) * 9) / 16}
           // inFullscreen={true}
           source={{uri: vid}}
           navigator={navigator}
-          showOnStart={false}
+          showOnStart={true}
           repeat={isGif}
         />
       </View>
+    );
+  } else if (item?.data?.post_hint === 'link') {
+    return (
+      <RNUrlPreview
+        containerStyle={{
+          borderWidth: 1,
+          borderColor: 'grey',
+          borderRadius: 10,
+          marginHorizontal: 10,
+          padding: 5,
+        }}
+        text={item?.data?.url}
+      />
     );
   } else if (item?.data?.media_embed?.content) {
     <View collapsable style={styles.container}>

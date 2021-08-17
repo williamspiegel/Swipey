@@ -16,7 +16,7 @@ import {
 } from 'react-native-responsive-screen';
 
 const CollapsibleComments: FC = React.memo(
-  ({children, isCollapsed, setIsCollapsed}: any) => {
+  ({children, isCollapsed, setIsCollapsed, header}: any) => {
     //console.log('collapsibleComments entered');
 
     const _commentMap = (item: {
@@ -58,7 +58,7 @@ const CollapsibleComments: FC = React.memo(
       );
     };
 
-    const InnerCollapsibleComments = React.memo(({children}: any) => {
+    const InnerCollapsibleComments = ({children}: any) => {
       return (
         <>
           {children &&
@@ -68,7 +68,7 @@ const CollapsibleComments: FC = React.memo(
             })}
         </>
       );
-    });
+    };
 
     const Comment = React.memo(
       ({
@@ -285,12 +285,17 @@ const CollapsibleComments: FC = React.memo(
           <FlatList
             collapsable
             removeClippedSubviews={true}
-            //  windowSize={11}
+            windowSize={3}
             initialNumToRender={3}
             maxToRenderPerBatch={3}
+            // updateCellsBatchingPeriod={500}
             data={children}
             keyExtractor={(item) => item.data.id + item?.data?.author}
             renderItem={_commentRender}
+            ListHeaderComponent={header}
+            ListFooterComponent={() => (
+              <View style={{height: heightPercentageToDP(8)}} />
+            )}
           />
         )}
       </>

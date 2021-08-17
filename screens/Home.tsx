@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 //import {LargeList} from 'react-native-largelist-v3';
-import {Pressable, ScrollView, View} from 'react-native';
+import {Pressable, View} from 'react-native';
 import {useQuery, useQueryClient} from 'react-query';
 import axios from 'axios';
 import he from 'he';
@@ -12,7 +12,7 @@ import {
 } from 'react-native-responsive-screen';
 
 //import ImageViewer from 'react-native-image-zoom-viewer';
-import CollapsibleCommentsRoot from '../components/CollapsibleCommentsRoot';
+import ContentRoot from '../components/ContentRoot';
 import FastImage from 'react-native-fast-image';
 import ContentDisplay from '../components/ContentDisplay';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -201,15 +201,8 @@ const Home = () => {
   const _renderItem = (type: string, item: any, index: number) => {
     // console.log(`current item at index ${index?.data?.all_awardings}`);
     //  console.log('index:    ', index);
-    return (
-      <ScrollView
-        collapsable
-        style={{
-          paddingTop: 40,
-          height: heightPercentageToDP(100),
-          width: widthPercentageToDP(100),
-        }}>
-        {/*<>*/}
+    const header = () => (
+      <>
         <View collapsable style={{padding: 10, flexDirection: 'row', flex: 1}}>
           <FastImage
             style={{
@@ -316,18 +309,20 @@ const Home = () => {
             />
           </Pressable>
         </View>
-        <CollapsibleCommentsRoot
-          token={anonTok || loggedInAuthToken}
-          item={item}
-          index={index}
-        />
-      </ScrollView>
+      </>
+    );
+    return (
+      <ContentRoot
+        token={anonTok || loggedInAuthToken}
+        item={item}
+        index={index}
+        header={header}
+      />
     );
   };
   const {data: subsDat, isSuccess: subsSuccess} = useQuery(
     'subs' + loggedInAuthToken,
     () => {
-      // console.log('sup nibba we in:  ', getTok(), utok);
       return axios({
         method: 'get',
         url: 'https://oauth.reddit.com/subreddits/mine/subscriber',
