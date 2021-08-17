@@ -229,7 +229,6 @@ const CollapsibleComments: FC = React.memo(
                       </Text>
                     </View>
                   </View>
-
                   <InnerCollapsibleComments children={children} />
                 </View>
               </Pressable>

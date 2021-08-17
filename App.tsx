@@ -9,10 +9,11 @@
  */
 
 import React from 'react';
-import {StatusBar} from 'react-native';
+import {SafeAreaView, StatusBar} from 'react-native';
 import {ThemeProvider} from 'react-native-elements';
 import {QueryClient, QueryClientProvider} from 'react-query';
 import Home from './screens/Home';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 declare const global: {HermesInternal: null | {}};
 const theme = {
@@ -24,12 +25,16 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <StatusBar barStyle="dark-content" />
-        <Home />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <StatusBar barStyle="dark-content" />
+          <SafeAreaView style={{flex: 1}}>
+            <Home />
+          </SafeAreaView>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 };
 
