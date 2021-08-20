@@ -14,6 +14,8 @@ import {ThemeProvider} from 'react-native-elements';
 import {QueryClient, QueryClientProvider} from 'react-query';
 import Home from './screens/Home';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import AuthContext from './context/AuthContext';
+import useAuth from './hooks/useAuth';
 
 declare const global: {HermesInternal: null | {}};
 const theme = {
@@ -22,19 +24,34 @@ const theme = {
   },
 };
 const queryClient = new QueryClient();
-
 const App = () => {
+  /*[
+  isLoggedIn,
+  loggedInAuthToken,
+  getTok,
+  promptAsync,
+  anonTok,
+]*/
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
-          <StatusBar barStyle="dark-content" />
-          <SafeAreaView style={{flex: 1}}>
-            <Home />
-          </SafeAreaView>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <ThemeProvider theme={theme}>
+        <StatusBar barStyle="dark-content" />
+        <SafeAreaView style={{flex: 1}}>
+          <QueryClientProvider client={queryClient}>
+            <AuthHelper />
+          </QueryClientProvider>
+        </SafeAreaView>
+      </ThemeProvider>
     </SafeAreaProvider>
+  );
+};
+
+const AuthHelper = () => {
+  const authVals = useAuth();
+  return (
+    <AuthContext.Provider value={authVals}>
+      <Home />
+    </AuthContext.Provider>
   );
 };
 

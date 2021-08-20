@@ -1,4 +1,23 @@
 {
   "name": "SwipeyReddit",
-  "displayName": "SwipeyReddit"
+  "displayName": "SwipeyReddit",
+  "expo": {
+    "name": "Swipey for Reddit",
+    "icon": "./assets/icon.png",
+    "version": "0.1",
+    "slug": "swipey",
+    "ios": {
+      "bundleIdentifier": "com.williamspiegel.swipey",
+      "buildNumber": "0.1"
+    },
+    "android": {
+      "package": "com.williamspiegel.swipey",
+      "versionCode": 1
+    },
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    }
+  }
 }

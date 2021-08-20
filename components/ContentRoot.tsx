@@ -21,10 +21,8 @@ export default function ContentRoot({item, token, header}: any) {
     {enabled: !!token && !!item?.data?.permalink},
   );
 
-  if (isLoading) {
-    return <>{header()}</>;
-  } else {
-    return (
+  return (
+    <>
       <CollapsibleComments
         isLoading={isLoading}
         isCollapsed={isCollapsed}
@@ -32,6 +30,6 @@ export default function ContentRoot({item, token, header}: any) {
         children={comments?.data[1]?.data?.children}
         header={header}
       />
-    );
-  }
+    </>
+  );
 }

@@ -5,9 +5,9 @@ import FastImage from 'react-native-fast-image';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import Markdown from 'react-native-markdown-display';
 import {widthPercentageToDP} from 'react-native-responsive-screen';
-import VideoPlayer from 'react-native-video-controls';
 import {decode} from 'html-entities';
 import RNUrlPreview from 'react-native-url-preview';
+import VideoPlayer from 'react-native-video-player';
 
 const ContentDisplay = React.memo(({item, navigator}) => {
   const [imgVisible, setimgVisible] = useState(false);
@@ -116,10 +116,11 @@ const ContentDisplay = React.memo(({item, navigator}) => {
           // width={widthPercentageToDP(100)}
           // height={(widthPercentageToDP(100) * 9) / 16}
           // inFullscreen={true}
-          source={{uri: vid}}
+          video={{uri: vid}}
           navigator={navigator}
           showOnStart={true}
-          repeat={isGif}
+          loop={isGif}
+          disableFullscreen
         />
       </View>
     );
@@ -132,6 +133,7 @@ const ContentDisplay = React.memo(({item, navigator}) => {
           borderRadius: 10,
           marginHorizontal: 10,
           padding: 5,
+          marginBottom: 10,
         }}
         text={item?.data?.url}
       />

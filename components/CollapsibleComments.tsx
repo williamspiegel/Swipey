@@ -280,23 +280,21 @@ const CollapsibleComments: FC = React.memo(
     };
     return (
       <>
-        {children && (
-          <FlatList
-            collapsable
-            removeClippedSubviews={true}
-            windowSize={3}
-            initialNumToRender={3}
-            maxToRenderPerBatch={3}
-            // updateCellsBatchingPeriod={500}
-            data={children}
-            keyExtractor={(item) => item.data.id + item?.data?.author}
-            renderItem={_commentRender}
-            ListHeaderComponent={header}
-            ListFooterComponent={() => (
-              <View style={{height: heightPercentageToDP(8)}} />
-            )}
-          />
-        )}
+        <FlatList
+          collapsable
+          removeClippedSubviews={true}
+          windowSize={3}
+          initialNumToRender={3}
+          maxToRenderPerBatch={3}
+          // updateCellsBatchingPeriod={500}
+          data={children}
+          keyExtractor={(item) => item.data.id + item?.data?.author}
+          renderItem={_commentRender}
+          ListHeaderComponent={header}
+          ListFooterComponent={() => (
+            <View style={{height: heightPercentageToDP(8)}} />
+          )}
+        />
       </>
     );
   },
