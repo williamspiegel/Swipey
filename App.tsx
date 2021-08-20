@@ -47,8 +47,15 @@ const App = () => {
 };
 
 const AuthHelper = () => {
-  const authVals = useAuth();
+  const [isLoggedIn, promptAsync, logout, tok] = useAuth();
+  const authVals = {
+    isLoggedIn: isLoggedIn,
+    promptAsync: promptAsync,
+    logout: logout,
+    tok: tok,
+  };
   return (
+    // @ts-ignore
     <AuthContext.Provider value={authVals}>
       <Home />
     </AuthContext.Provider>

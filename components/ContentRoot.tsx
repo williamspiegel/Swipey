@@ -1,25 +1,26 @@
 import axios from 'axios';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {useQuery} from 'react-query';
 import CollapsibleComments from './CollapsibleComments';
+import AuthContext from '../context/AuthContext';
 
-export default function ContentRoot({item, token, header}: any) {
-  //index
-  //const queryClient = useQueryClient();
+export default function ContentRoot({item, header}: any) {
+  const {tok} = useContext(AuthContext);
   const [isCollapsed, setIsCollapsed] = useState({});
   const {data: comments, isLoading} = useQuery(
-    ['comments', token, item?.data?.permalink],
+    ['comments', tok, item?.data?.permalink],
     () =>
       axios({
         method: 'get',
         url: 'https://oauth.reddit.com' + item.data.permalink,
         headers: {
-          Authorization: `bearer ${token}`,
+          Authorization: `bearer ${tok}`,
           'User-Agent': 'Swipey for Reddit',
         },
       }),
-    {enabled: !!token && !!item?.data?.permalink},
+    {enabled: !!tok && !!item?.data?.permalink},
   );
+  console.log('comment token:   ', tok);
 
   return (
     <>

@@ -3,20 +3,20 @@ import axios from 'axios';
 import {useState} from 'react';
 import {DataProvider} from 'recyclerlistview';
 
-export default function useSub(loggedInAuthToken, isLoggedIn, anonTok) {
+export default function useSub(tok, isLoggedIn) {
   const [dataProvider, setDataProvider] = useState(
     new DataProvider((r1, r2) => {
       return r1.data.id !== r2.data.id;
     }),
   );
   const {data: subData, isSuccess: subSuccess} = useQuery(
-    'subData' + loggedInAuthToken,
+    'subData' + tok,
     () => {
       return axios({
         method: 'get',
         url: 'https://oauth.reddit.com/r/all/hot?g=US&after&limit=100',
         headers: {
-          Authorization: `bearer ${anonTok || loggedInAuthToken}`, // ${loggedInAuthToken}`,
+          Authorization: `bearer ${tok}`, // ${loggedInAuthToken}`,
           'User-Agent': 'Swipey for Reddit',
         },
       })
@@ -27,7 +27,7 @@ export default function useSub(loggedInAuthToken, isLoggedIn, anonTok) {
         })
         .catch((err) => console.log('sub fetch error:  ', err));
     },
-    {enabled: isLoggedIn || !!anonTok},
+    {enabled: !!tok},
   );
   return [subData, subSuccess, dataProvider];
 }

@@ -21,18 +21,8 @@ import AuthContext from '../context/AuthContext';
 const fullWidth = widthPercentageToDP(100);
 const Home = () => {
   const [selectedSubImg, setSelectedSubImg] = useState('');
-  const [
-    isLoggedIn,
-    loggedInAuthToken,
-    getTok,
-    promptAsync,
-    anonTok,
-  ] = useContext(AuthContext);
-  const [subData, subSuccess, dataProvider] = useSub(
-    loggedInAuthToken,
-    isLoggedIn,
-    anonTok,
-  );
+  const {isLoggedIn, promptAsync, logout, tok} = useContext(AuthContext);
+  const [subData, subSuccess, dataProvider] = useSub(tok, isLoggedIn);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [bottomContent, setbottomContent] = useState(BottomContent.Subs);
 
@@ -47,23 +37,21 @@ const Home = () => {
   );
 
   const _renderItem = (type: string, item: any, index: number) => {
-    return (
-      <CarouselItem type={type} item={item} index={index} anonTok={anonTok} />
-    );
+    return <CarouselItem type={type} item={item} index={index} />;
   };
   const {data: subsDat, isSuccess: subsSuccess} = useQuery(
-    'subs' + loggedInAuthToken,
+    'subs' + tok,
     () => {
       return axios({
         method: 'get',
         url: 'https://oauth.reddit.com/subreddits/mine/subscriber',
         headers: {
-          Authorization: `bearer ${anonTok || loggedInAuthToken}`,
+          Authorization: `bearer ${tok}`,
           'User-Agent': 'Swipey for Reddit',
         },
       });
     },
-    {enabled: isLoggedIn},
+    {enabled: !!isLoggedIn},
   );
   const bottomSheetDisplay = () => {
     if (bottomContent === BottomContent.Subs) {

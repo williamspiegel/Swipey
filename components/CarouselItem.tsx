@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {useQuery} from 'react-query';
 import axios from 'axios';
 import {Pressable, View} from 'react-native';
@@ -11,20 +11,22 @@ import {Avatar, Icon, Text} from 'react-native-elements';
 import he from 'he';
 import ContentDisplay from './ContentDisplay';
 import ContentRoot from './ContentRoot';
+import AuthContext from '../context/AuthContext';
 
-export default function CarouselItem({type, item, index, tok, anonTok}: any) {
+export default function CarouselItem({type, item, index}: any) {
+  const {tok} = useContext(AuthContext);
   const {data: subAbout, isSuccess: subFetched} = useQuery(
-    'subAbout' + anonTok + item?.data?.subreddit, //getTok(),
+    'subAbout' + tok + item?.data?.subreddit, //getTok(),
     () =>
       axios({
         method: 'get',
         url: `https://oauth.reddit.com/r/${item?.data?.subreddit}/about`,
         headers: {
-          Authorization: `bearer ${anonTok}`, //|| loggedInAuthToken
+          Authorization: `bearer ${tok}`, //|| loggedInAuthToken
           'User-Agent': 'Swipey for Reddit',
         },
       }),
-    {enabled: !!anonTok}, //isLoggedIn ||
+    {enabled: !!tok}, //isLoggedIn ||
   );
   // console.log(`current item at index ${index?.data?.all_awardings}`);
   //  console.log('index:    ', index);
@@ -150,12 +152,5 @@ export default function CarouselItem({type, item, index, tok, anonTok}: any) {
       </View>
     </>
   );
-  return (
-    <ContentRoot
-      token={anonTok} //|| loggedInAuthToken}
-      item={item}
-      index={index}
-      header={header}
-    />
-  );
+  return <ContentRoot item={item} index={index} header={header} />;
 }
