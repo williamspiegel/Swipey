@@ -18,7 +18,7 @@ import AuthContext from '../context/AuthContext';
 
 const fullWidth = widthPercentageToDP(100);
 const Home = () => {
-  const [selectedSubImg, setSelectedSubImg] = useState('');
+  // const [selectedSubImg, setSelectedSubImg] = useState('');
   const {isLoggedIn, promptAsync} = useContext(AuthContext);
   const [subData, subsDat, subSuccess, subsSuccess, dataProvider] = useSub();
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -40,8 +40,9 @@ const Home = () => {
 
   const bottomSheetDisplay = () => {
     if (bottomContent === BottomContent.Subs) {
-      subsSuccess && console.log('my subs:   ', subsDat?.data);
+      // subsSuccess && console.log('my subs:   ', subsDat?.data);
       return subsSuccess ? (
+        /*@ts-ignore*/
         <Text>works: {subsDat?.data?.children}</Text>
       ) : (
         // <BottomSheetFlatList/>
@@ -55,6 +56,7 @@ const Home = () => {
 
   return (
     <>
+      {/*@ts-ignore*/}
       {subSuccess && subData?.data?.data?.children && (
         <>
           <RecyclerListView
@@ -82,10 +84,12 @@ const Home = () => {
             }}
             isHorizontal
             //  renderAheadOffset={2}
-            layoutProvider={_layoutProvider}
+            layoutProvider={_layoutProvider} /*@ts-ignore*/
             dataProvider={dataProvider}
+            /*@ts-ignore*/
             rowRenderer={(type, data, index) => _renderItem(type, data, index)}
           />
+          {/*{_renderItem(null, subData?.data?.data?.children[0], 0)}*/}
           <View
             style={{
               flexDirection: 'row',

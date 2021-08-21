@@ -58,7 +58,7 @@ const CollapsibleComments: FC = React.memo(
       );
     };
 
-    const InnerCollapsibleComments = ({children}: any) => {
+    const InnerCollapsibleComments = React.memo(({children}: any) => {
       return (
         <>
           {children &&
@@ -68,7 +68,7 @@ const CollapsibleComments: FC = React.memo(
             })}
         </>
       );
-    };
+    });
 
     const Comment = React.memo(
       ({
@@ -294,6 +294,7 @@ const CollapsibleComments: FC = React.memo(
           ListFooterComponent={() => (
             <View style={{height: heightPercentageToDP(8)}} />
           )}
+          extraData={isCollapsed}
         />
       </>
     );

@@ -6,12 +6,15 @@ import ImageViewer from 'react-native-image-zoom-viewer';
 import Markdown from 'react-native-markdown-display';
 import {widthPercentageToDP} from 'react-native-responsive-screen';
 import {decode} from 'html-entities';
+// @ts-ignore
 import RNUrlPreview from 'react-native-url-preview';
+// @ts-ignore
 import VideoPlayer from 'react-native-video-player';
 
-const ContentDisplay = React.memo(({item, navigator}) => {
+// @ts-ignore
+const ContentDisplay = React.memo(({item, navigator}: any) => {
   const [imgVisible, setimgVisible] = useState(false);
-  const [currentUri, setcurrentUri] = useState({
+  const [, setcurrentUri] = useState({
     uri: '',
     s: {
       y: 960,

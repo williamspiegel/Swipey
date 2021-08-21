@@ -30,6 +30,7 @@ export default function ContentRoot({item, header}: any) {
   return (
     <>
       <CollapsibleComments
+        /*@ts-ignore*/
         isLoading={isLoading}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}

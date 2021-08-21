@@ -53,8 +53,8 @@ export default function useSub() {
     },
     {enabled: !!isLoggedIn},
   );
-  console.log('subData:   ', subData);
-  console.log('subsDat:   ', subsStatus);
+  // console.log('subData:   ', subData);
+  // console.log('subsDat:   ', subsStatus);
   (status == 'error' || subsStatus == 'error') && logout();
   return [subData, subsDat, subSuccess, subsSuccess, dataProvider];
 }

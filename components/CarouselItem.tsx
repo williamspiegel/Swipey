@@ -14,10 +14,10 @@ import ContentRoot from './ContentRoot';
 import AuthContext from '../context/AuthContext';
 import useVote from '../hooks/useVote';
 
-export default function CarouselItem({type, item, index}: any) {
+export default function CarouselItem({item, index}: any) {
   const {tok} = useContext(AuthContext);
   const [upvote, downvote, vote] = useVote(item?.data?.name);
-  const {data: subAbout, isSuccess: subFetched} = useQuery(
+  const {data: subAbout} = useQuery(
     'subAbout' + tok + item?.data?.subreddit, //getTok(),
     () =>
       axios({
@@ -32,7 +32,7 @@ export default function CarouselItem({type, item, index}: any) {
   );
   // console.log(`current item at index ${index?.data?.all_awardings}`);
   //  console.log('index:    ', index);
-  // @ts-ignore
+
   const header = () => (
     <>
       <View collapsable style={{padding: 10, flexDirection: 'row'}}>
@@ -130,6 +130,7 @@ export default function CarouselItem({type, item, index}: any) {
             type={'material-community'}
           />
         </Pressable>
+        {/*@ts-ignore*/}
         <Pressable onPress={upvote} collapsable style={{flex: 1}}>
           <Icon
             size={widthPercentageToDP(7)}
@@ -141,11 +142,11 @@ export default function CarouselItem({type, item, index}: any) {
         <View collapsable>
           <Text adjustsFontSizeToFit numberOfLines={1} ellipsizeMode={'clip'}>
             {item?.data?.score < 1000
-              ? item?.data?.score
+              ? item?.data?.score //@ts-ignore
               : Number.parseFloat(item?.data?.score / 1000).toFixed(1) + 'k'}
           </Text>
         </View>
-
+        {/*@ts-ignore*/}
         <Pressable onPress={downvote} collapsable style={{flex: 1}}>
           <Icon
             size={widthPercentageToDP(7)}
