@@ -1,14 +1,8 @@
 import {useContext} from 'react';
 import AuthContext from '../context/AuthContext';
 
-function useLoggedInAction() {
-  const [
-    isLoggedIn,
-    loggedInAuthToken,
-    getTok,
-    promptAsync,
-    anonTok,
-  ] = useContext(AuthContext);
+export default function useLoggedInAction() {
+  const {isLoggedIn, promptAsync} = useContext(AuthContext);
   return (action: Function) => {
     if (isLoggedIn) {
       action();

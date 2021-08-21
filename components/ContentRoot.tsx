@@ -5,9 +5,14 @@ import CollapsibleComments from './CollapsibleComments';
 import AuthContext from '../context/AuthContext';
 
 export default function ContentRoot({item, header}: any) {
-  const {tok} = useContext(AuthContext);
+  const {tok, logout} = useContext(AuthContext);
   const [isCollapsed, setIsCollapsed] = useState({});
-  const {data: comments, isLoading} = useQuery(
+
+  const {
+    data: comments,
+    isLoading,
+    status,
+  } = useQuery(
     ['comments', tok, item?.data?.permalink],
     () =>
       axios({
@@ -21,7 +26,7 @@ export default function ContentRoot({item, header}: any) {
     {enabled: !!tok && !!item?.data?.permalink},
   );
   console.log('comment token:   ', tok);
-
+  status == 'error' && logout();
   return (
     <>
       <CollapsibleComments

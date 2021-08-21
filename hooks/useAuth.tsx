@@ -8,8 +8,7 @@ import React, {useEffect, useState} from 'react';
 WebBrowser.maybeCompleteAuthSession();
 const config: any = {
   method: 'post',
-  url:
-    'https://www.reddit.com/api/v1/access_token?grant_type=https://oauth.reddit.com/grants/installed_client&device_id=DO_NOT_TRACK_THIS_DEVICE',
+  url: 'https://www.reddit.com/api/v1/access_token?grant_type=https://oauth.reddit.com/grants/installed_client&device_id=DO_NOT_TRACK_THIS_DEVICE',
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded',
     Authorization: 'Basic cjNfUlBRNVRIMmJJREE6',
@@ -84,6 +83,9 @@ export default function useAuth() {
   const logout = () => {
     AsyncStorage.removeItem('userToken');
     setIsLoggedIn(false);
+    setTok('');
+    queryClient.invalidateQueries('anon');
+    console.log('logout triggered');
   };
 
   useEffect(() => {

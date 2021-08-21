@@ -105,17 +105,7 @@ const ContentDisplay = React.memo(({item, navigator}) => {
     return (
       <View collapsable style={styles.container}>
         <VideoPlayer
-          // videoProps={{
-          //   shouldPlay: false,
-          //   resizeMode: Video.RESIZE_MODE_CONTAIN,
-          //   source: {
-          //     uri: vid,
-          //   },
-          // }}
           showFullscreenButton={false}
-          // width={widthPercentageToDP(100)}
-          // height={(widthPercentageToDP(100) * 9) / 16}
-          // inFullscreen={true}
           video={{uri: vid}}
           navigator={navigator}
           showOnStart={true}

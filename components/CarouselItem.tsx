@@ -12,9 +12,11 @@ import he from 'he';
 import ContentDisplay from './ContentDisplay';
 import ContentRoot from './ContentRoot';
 import AuthContext from '../context/AuthContext';
+import useVote from '../hooks/useVote';
 
 export default function CarouselItem({type, item, index}: any) {
   const {tok} = useContext(AuthContext);
+  const [upvote, downvote, vote] = useVote(item?.data?.name);
   const {data: subAbout, isSuccess: subFetched} = useQuery(
     'subAbout' + tok + item?.data?.subreddit, //getTok(),
     () =>
@@ -30,6 +32,7 @@ export default function CarouselItem({type, item, index}: any) {
   );
   // console.log(`current item at index ${index?.data?.all_awardings}`);
   //  console.log('index:    ', index);
+  // @ts-ignore
   const header = () => (
     <>
       <View collapsable style={{padding: 10, flexDirection: 'row'}}>
@@ -127,11 +130,12 @@ export default function CarouselItem({type, item, index}: any) {
             type={'material-community'}
           />
         </Pressable>
-        <Pressable collapsable style={{flex: 1}}>
+        <Pressable onPress={upvote} collapsable style={{flex: 1}}>
           <Icon
             size={widthPercentageToDP(7)}
             name={'arrow-up-bold'}
             type={'material-community'}
+            color={vote === 1 ? 'orange' : 'black'}
           />
         </Pressable>
         <View collapsable>
@@ -142,11 +146,12 @@ export default function CarouselItem({type, item, index}: any) {
           </Text>
         </View>
 
-        <Pressable collapsable style={{flex: 1}}>
+        <Pressable onPress={downvote} collapsable style={{flex: 1}}>
           <Icon
             size={widthPercentageToDP(7)}
             name={'arrow-down-bold'}
             type={'material-community'}
+            color={vote === -1 ? 'blue' : 'black'}
           />
         </Pressable>
       </View>

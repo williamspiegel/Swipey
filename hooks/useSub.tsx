@@ -1,15 +1,21 @@
 import {useQuery} from 'react-query';
 import axios from 'axios';
-import {useState} from 'react';
+import {useContext, useState} from 'react';
 import {DataProvider} from 'recyclerlistview';
+import AuthContext from '../context/AuthContext';
 
-export default function useSub(tok, isLoggedIn) {
+export default function useSub() {
+  const {tok, logout, isLoggedIn} = useContext(AuthContext);
   const [dataProvider, setDataProvider] = useState(
     new DataProvider((r1, r2) => {
       return r1.data.id !== r2.data.id;
     }),
   );
-  const {data: subData, isSuccess: subSuccess} = useQuery(
+  const {
+    data: subData,
+    isSuccess: subSuccess,
+    status,
+  } = useQuery(
     'subData' + tok,
     () => {
       return axios({
@@ -29,5 +35,26 @@ export default function useSub(tok, isLoggedIn) {
     },
     {enabled: !!tok},
   );
-  return [subData, subSuccess, dataProvider];
+  const {
+    data: subsDat,
+    isSuccess: subsSuccess,
+    status: subsStatus,
+  } = useQuery(
+    'subs' + tok,
+    () => {
+      return axios({
+        method: 'get',
+        url: 'https://oauth.reddit.com/subreddits/mine/subscriber',
+        headers: {
+          Authorization: `bearer ${tok}`,
+          'User-Agent': 'Swipey for Reddit',
+        },
+      });
+    },
+    {enabled: !!isLoggedIn},
+  );
+  console.log('subData:   ', subData);
+  console.log('subsDat:   ', subsStatus);
+  (status == 'error' || subsStatus == 'error') && logout();
+  return [subData, subsDat, subSuccess, subsSuccess, dataProvider];
 }
